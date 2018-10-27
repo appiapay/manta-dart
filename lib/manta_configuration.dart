@@ -57,11 +57,18 @@ class MantaConfiguration {
     return configuration;
   }
 
-  void connect() async {
-    if (client.connectionState == ConnectionState.connected ||
-        client.connectionState == ConnectionState.connecting) {
-      return;
+  Future<bool> waitForConnection() async {
+    if (client.connectionState == ConnectionState.connected) {
+      return true;
     }
+    if (client.connectionState == ConnectionState.connecting) {
+      while (client.connectionState != ConnectionState.connected) {
+        await Future.delayed(Duration(milliseconds: 100));
+      }
+    }
+  }
+
+  void connect() async {
 
     try {
       await client.connect();
@@ -90,7 +97,8 @@ class MantaConfiguration {
   }
 
   void link(String link_code) async {
-    await connect();
+    await waitForConnection();
+
     final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
     builder.addString(helper.encodePublicKeyToPem(rsaPublic));
 

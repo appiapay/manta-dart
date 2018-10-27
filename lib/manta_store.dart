@@ -28,15 +28,21 @@ class MantaStore {
   String session_id;
   MqttClient client;
   final String application_id;
+  final String application_token;
   Stream<AckMessage> acks_stream;
   StreamQueue<AckMessage> acks;
 
-  MantaStore({String this.application_id, String host= "localhost", MqttClient mqtt_client= null}) {
-    client = (mqtt_client==null)  ? MqttClient(host, generate_session_id()) : mqtt_client;
+  MantaStore(
+      {@required this.application_id,
+        @required this.application_token,
+      String host = "localhost",
+      MqttClient mqtt_client = null}) {
+    client = (mqtt_client == null)
+        ? MqttClient(host, generate_session_id())
+        : mqtt_client;
     //client.logging(true);
     client.keepAlivePeriod = 20;
     client.onDisconnected = onDisconnected;
-
   }
 
   void reconnect() async {
@@ -49,12 +55,28 @@ class MantaStore {
   void onDisconnected() {
     logger.info("Client disconnection");
     reconnect();
+  }
 
+  Future<bool> waitForConnection() async {
+    if (client.connectionState == ConnectionState.connected) {
+      return true;
+    }
+    if (client.connectionState == ConnectionState.connecting) {
+      while (client.connectionState != ConnectionState.connected) {
+        await Future.delayed(Duration(milliseconds: 100));
+      }
+    }
   }
 
   void connect() async {
+    if (client.connectionState == ConnectionState.connected) return;
+    if (client.connectionState == ConnectionState.connecting) {
+      await waitForConnection();
+      return;
+    }
+
     try {
-      await client.connect();
+      await client.connect(application_id, application_token);
       logger.info('Connected');
     } catch (e) {
       logger.warning("Client exception - $e");
@@ -68,19 +90,20 @@ class MantaStore {
       return tokens[0] == 'acks';
     }).map((List<MqttReceivedMessage> c) {
       final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
-      final json_data = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      final json_data =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       return AckMessage.fromJson(json.decode(json_data));
     });
 
     acks_stream.forEach(print);
 
     acks = StreamQueue<AckMessage>(acks_stream);
-
   }
 
-  Future<AckMessage> merchant_order_request (
-      {@required Decimal amount, @required String fiat, String crypto = null}) async {
-
+  Future<AckMessage> merchant_order_request(
+      {@required Decimal amount,
+      @required String fiat,
+      String crypto = null}) async {
     await connect();
 
     this.session_id = generate_session_id();
@@ -117,13 +140,11 @@ void main() async {
     print('${rec.level.name}: ${rec.time}: ${rec.message}');
   });
 
-
   final store = MantaStore(application_id: 'test', host: 'localhost');
   await store.connect();
 
 //  await store.merchant_order_request(amount: Decimal.parse("0.1"),
 //    fiat: 'EUR');
-
 
   print("gatto");
 //  while (true) {

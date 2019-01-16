@@ -8,7 +8,7 @@ part of 'messages.dart';
 
 MerchantOrderRequestMessage _$MerchantOrderRequestMessageFromJson(
     Map<String, dynamic> json) {
-  return new MerchantOrderRequestMessage(
+  return MerchantOrderRequestMessage(
       amount: json['amount'] == null
           ? null
           : str_to_decimal(json['amount'] as String),
@@ -17,21 +17,18 @@ MerchantOrderRequestMessage _$MerchantOrderRequestMessageFromJson(
       crypto_currency: json['crypto_currency'] as String);
 }
 
-abstract class _$MerchantOrderRequestMessageSerializerMixin {
-  Decimal get amount;
-  String get session_id;
-  String get fiat_currency;
-  String get crypto_currency;
-  Map<String, dynamic> toJson() => <String, dynamic>{
-        'amount': amount == null ? null : decimal_to_str(amount),
-        'session_id': session_id,
-        'fiat_currency': fiat_currency,
-        'crypto_currency': crypto_currency
-      };
-}
+Map<String, dynamic> _$MerchantOrderRequestMessageToJson(
+        MerchantOrderRequestMessage instance) =>
+    <String, dynamic>{
+      'amount':
+          instance.amount == null ? null : decimal_to_str(instance.amount),
+      'session_id': instance.session_id,
+      'fiat_currency': instance.fiat_currency,
+      'crypto_currency': instance.crypto_currency
+    };
 
 AckMessage _$AckMessageFromJson(Map<String, dynamic> json) {
-  return new AckMessage(
+  return AckMessage(
       txid: json['txid'] as String,
       status: json['status'] as String,
       url: json['url'] as String,
@@ -43,21 +40,100 @@ AckMessage _$AckMessageFromJson(Map<String, dynamic> json) {
       memo: json['memo'] as String);
 }
 
-abstract class _$AckMessageSerializerMixin {
-  String get txid;
-  String get status;
-  String get url;
-  Decimal get amount;
-  String get transaction_hash;
-  String get transaction_currency;
-  String get memo;
-  Map<String, dynamic> toJson() => <String, dynamic>{
-        'txid': txid,
-        'status': status,
-        'url': url,
-        'amount': amount == null ? null : decimal_to_str(amount),
-        'transaction_hash': transaction_hash,
-        'transaction_currency': transaction_currency,
-        'memo': memo
-      };
+Map<String, dynamic> _$AckMessageToJson(AckMessage instance) =>
+    <String, dynamic>{
+      'txid': instance.txid,
+      'status': instance.status,
+      'url': instance.url,
+      'amount':
+          instance.amount == null ? null : decimal_to_str(instance.amount),
+      'transaction_hash': instance.transaction_hash,
+      'transaction_currency': instance.transaction_currency,
+      'memo': instance.memo
+    };
+
+Destination _$DestinationFromJson(Map<String, dynamic> json) {
+  return Destination(
+      amount: json['amount'] == null
+          ? null
+          : str_to_decimal(json['amount'] as String),
+      destination_address: json['destination_address'] as String,
+      crypto_currency: json['crypto_currency'] as String);
 }
+
+Map<String, dynamic> _$DestinationToJson(Destination instance) =>
+    <String, dynamic>{
+      'amount':
+          instance.amount == null ? null : decimal_to_str(instance.amount),
+      'destination_address': instance.destination_address,
+      'crypto_currency': instance.crypto_currency
+    };
+
+Merchant _$MerchantFromJson(Map<String, dynamic> json) {
+  return Merchant(
+      name: json['name'] as String, address: json['address'] as String);
+}
+
+Map<String, dynamic> _$MerchantToJson(Merchant instance) =>
+    <String, dynamic>{'name': instance.name, 'address': instance.address};
+
+PaymentRequestMessage _$PaymentRequestMessageFromJson(
+    Map<String, dynamic> json) {
+  return PaymentRequestMessage(
+      merchant: json['merchant'] == null
+          ? null
+          : Merchant.fromJson(json['merchant'] as Map<String, dynamic>),
+      amount: json['amount'] == null
+          ? null
+          : str_to_decimal(json['amount'] as String),
+      fiat_currency: json['fiat_currency'] as String,
+      destinations: (json['destinations'] as List)
+          ?.map((e) => e == null
+              ? null
+              : Destination.fromJson(e as Map<String, dynamic>))
+          ?.toList(),
+      supported_cryptos: (json['supported_cryptos'] as List)
+          ?.map((e) => e as String)
+          ?.toSet());
+}
+
+Map<String, dynamic> _$PaymentRequestMessageToJson(
+        PaymentRequestMessage instance) =>
+    <String, dynamic>{
+      'merchant': instance.merchant,
+      'amount':
+          instance.amount == null ? null : decimal_to_str(instance.amount),
+      'fiat_currency': instance.fiat_currency,
+      'destinations': instance.destinations,
+      'supported_cryptos': instance.supported_cryptos?.toList()
+    };
+
+PaymentRequestEnvelope _$PaymentRequestEnvelopeFromJson(
+    Map<String, dynamic> json) {
+  return PaymentRequestEnvelope(
+      message: json['message'] as String,
+      signature: json['signature'] as String,
+      version: json['version'] as String);
+}
+
+Map<String, dynamic> _$PaymentRequestEnvelopeToJson(
+        PaymentRequestEnvelope instance) =>
+    <String, dynamic>{
+      'message': instance.message,
+      'signature': instance.signature,
+      'version': instance.version
+    };
+
+PaymentMessage _$PaymentMessageFromJson(Map<String, dynamic> json) {
+  return PaymentMessage(
+      crypto_currency: json['crypto_currency'] as String,
+      transaction_hash: json['transaction_hash'] as String,
+      version: json['version'] as String);
+}
+
+Map<String, dynamic> _$PaymentMessageToJson(PaymentMessage instance) =>
+    <String, dynamic>{
+      'crypto_currency': instance.crypto_currency,
+      'transaction_hash': instance.transaction_hash,
+      'version': instance.version
+    };

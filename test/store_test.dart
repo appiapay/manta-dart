@@ -49,7 +49,7 @@ void main() {
 
     final store = MantaStore(application_id: 'application1', mqtt_client: client);
     await store.connect();
-    verify(client.connect());
+    verify(client.connect(any, any));
   });
 
 

@@ -34,7 +34,7 @@ class MantaStore {
 
   MantaStore(
       {@required this.application_id,
-        @required this.application_token,
+      @required this.application_token,
       String host = "localhost",
       MqttClient mqtt_client = null}) {
     client = (mqtt_client == null)
@@ -131,6 +131,16 @@ class MantaStore {
     }
 
     return ack;
+  }
+
+  merchant_order_cancel() {
+    logger.info("Publishing merchant_order_cancel for session $session_id");
+
+    final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
+    builder.addString('');
+
+    client.publishMessage(
+        "merchant_order_cancel/$session_id", MqttQos.atLeastOnce, builder.payload);
   }
 }
 

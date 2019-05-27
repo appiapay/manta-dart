@@ -20,11 +20,12 @@ class MerchantOrderRequestMessage {
   String fiat_currency;
   String crypto_currency;
 
-  MerchantOrderRequestMessage(
-      {Decimal this.amount,
-      String this.session_id,
-      String this.fiat_currency,
-      String this.crypto_currency});
+  MerchantOrderRequestMessage({
+      this.amount,
+      this.session_id,
+      this.fiat_currency,
+      this.crypto_currency
+  });
 }
 
 @JsonSerializable()
@@ -39,17 +40,18 @@ class AckMessage {
   String transaction_currency;
   String memo;
 
-  AckMessage(
-      {this.txid,
+  AckMessage({
+      this.txid,
       this.status,
       this.url,
       this.amount,
       this.transaction_hash,
       this.transaction_currency,
-      this.memo});
+      this.memo
+  });
 
   factory AckMessage.fromJson(Map<String, dynamic> json) =>
-      _$AckMessageFromJson(json);
+    _$AckMessageFromJson(json);
 }
 
 @JsonSerializable()
@@ -68,7 +70,7 @@ class Destination {
 
   Map<String, dynamic> toJson() => _$DestinationToJson(this);
   factory Destination.fromJson(Map<String, dynamic> json) =>
-      _$DestinationFromJson(json);
+    _$DestinationFromJson(json);
 }
 
 @JsonSerializable()
@@ -80,7 +82,7 @@ class Merchant {
 
   Map<String, dynamic> toJson() => _$MerchantToJson(this);
   factory Merchant.fromJson(Map<String, dynamic> json) =>
-      _$MerchantFromJson(json);
+    _$MerchantFromJson(json);
 }
 
 @JsonSerializable()
@@ -98,12 +100,13 @@ class PaymentRequestMessage {
   factory PaymentRequestMessage.fromJson(Map<String, dynamic> json) =>
     _$PaymentRequestMessageFromJson(json);
 
-  PaymentRequestMessage(
-      {this.merchant,
+  PaymentRequestMessage({
+      this.merchant,
       this.amount,
       this.fiat_currency,
       this.destinations,
-      this.supported_cryptos});
+      this.supported_cryptos
+  });
 
   PaymentRequestEnvelope getEnvelope(RSAPrivateKey key) {
     final jsonMessage = jsonEncode(this);
@@ -142,13 +145,15 @@ class PaymentMessage {
   String transaction_hash;
   String version;
 
-  PaymentMessage(
-  {this.crypto_currency, this.transaction_hash, this.version = MANTA_VERSION}
-      );
 
   Map<String, dynamic> toJson() => _$PaymentMessageToJson(this);
+  PaymentMessage({
+      this.crypto_currency,
+      this.transaction_hash,
+      this.version = MANTA_VERSION
+  });
 
   factory PaymentMessage.fromJson(Map<String, dynamic> json) =>
-      _$PaymentMessageFromJson(json);
+    _$PaymentMessageFromJson(json);
 
 }

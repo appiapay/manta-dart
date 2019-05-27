@@ -1,8 +1,8 @@
 import 'package:decimal/decimal.dart';
-import 'package:json_annotation/json_annotation.dart';
+import 'package:json_annotation/json_annotation.dart' show JsonSerializable, JsonKey;
 import "package:pointycastle/export.dart";
 import "package:manta_dart/crypto.dart";
-import 'dart:convert';
+import 'dart:convert' show jsonDecode, jsonEncode;
 
 part 'messages.g.dart';
 

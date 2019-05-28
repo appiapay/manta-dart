@@ -46,8 +46,6 @@ List<int> decodePEM(String pem) {
     pem = pem.substring(0, index);
   }
 
-
-
   return base64.decode(pem);
 }
 
@@ -66,7 +64,6 @@ Uint8List _getBytesFromPEMString(String pemString) {
   var base64 = lines.sublist(1, lines.length - 1).join('');
   return new Uint8List.fromList(base64Decode(base64));
 }
-
 
 
 class RsaKeyHelper {
@@ -201,6 +198,7 @@ class RsaKeyHelper {
 
     return rsaPublicKey;
   }
+
 
   parsePrivateKeyFromPem(pemString) {
     // List<int> privateKeyDER = decodePEM(pemString);

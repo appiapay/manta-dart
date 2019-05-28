@@ -183,10 +183,7 @@ class PaymentRequestMessage extends BaseMessage {
     final helper = RsaKeyHelper();
     final signature = helper.sign(jsonMessage, key);
 
-    return PaymentRequestEnvelope(
-      message: jsonMessage,
-      signature: signature,
-    );
+    return PaymentRequestEnvelope(message: jsonMessage, signature: signature,);
   }
 }
 

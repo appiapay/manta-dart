@@ -211,6 +211,11 @@ class PaymentRequestEnvelope extends BaseMessage {
 
   Map<String, dynamic> toJson() => _$PaymentRequestEnvelopeToJson(this);
 
+  bool verify(RSAPublicKey publicKey) {
+    final helper = RsaKeyHelper();
+    return helper.verify(signature, message, publicKey);
+  }
+
   PaymentRequestMessage unpack() {
     return PaymentRequestMessage.fromJson(jsonDecode(this.message));
   }

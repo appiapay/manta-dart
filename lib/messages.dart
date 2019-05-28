@@ -192,7 +192,7 @@ class PaymentRequestMessage extends BaseMessage {
 class PaymentRequestEnvelope extends BaseMessage {
   String message;
   String signature;
-  String version;
+  String version = MANTA_VERSION;
 
   PaymentRequestEnvelope(
       {this.message, this.signature, this.version = MANTA_VERSION});

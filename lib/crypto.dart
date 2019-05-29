@@ -184,7 +184,7 @@ class RsaKeyHelper {
     return parsePublicKeyFromCertificate(cert.readAsStringSync());
   }
 
-  parsePublicKeyFromPem(pemString) {
+  RSAPublicKey parsePublicKeyFromPem(pemString) {
     List<int> publicKeyDER = decodePEM(pemString);
     var asn1Parser = new ASN1Parser(publicKeyDER);
     var topLevelSeq = asn1Parser.nextObject() as ASN1Sequence;
@@ -204,7 +204,7 @@ class RsaKeyHelper {
   }
 
 
-  parsePrivateKeyFromPem(pemString) {
+  RSAPrivateKey parsePrivateKeyFromPem(pemString) {
     // List<int> privateKeyDER = decodePEM(pemString);
     Uint8List privateKeyDER = _getBytesFromPEMString(pemString);
     var asn1Parser = new ASN1Parser(privateKeyDER);
@@ -251,7 +251,7 @@ class RsaKeyHelper {
 
   }
 
-  encodePublicKeyToPem(RSAPublicKey publicKey) {
+  String encodePublicKeyToPem(RSAPublicKey publicKey) {
     var algorithmSeq = new ASN1Sequence();
     var algorithmAsn1Obj = new ASN1Object.fromBytes(Uint8List.fromList([0x6, 0x9, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0xd, 0x1, 0x1, 0x1]));
     var paramsAsn1Obj = new ASN1Object.fromBytes(Uint8List.fromList([0x5, 0x0]));
@@ -271,7 +271,7 @@ class RsaKeyHelper {
     return """-----BEGIN PUBLIC KEY-----\r\n$dataBase64\r\n-----END PUBLIC KEY-----""";
   }
 
-  encodePrivateKeyToPem(RSAPrivateKey privateKey) {
+  String encodePrivateKeyToPem(RSAPrivateKey privateKey) {
     var version = ASN1Integer(BigInt.from(0));
 
     var algorithmSeq = new ASN1Sequence();

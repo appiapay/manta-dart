@@ -13,6 +13,7 @@ import "package:manta_dart/messages.dart";
 
 const PRIVATE_KEY = "test/certificates/root/keys/test.key";
 const CERTIFICATE = "test/certificates/root/certs/test.crt";
+
 class MockClient extends Mock implements MqttClient {}
 
 MockClient mock_it() {
@@ -55,7 +56,7 @@ final MERCHANT = Merchant(name: "Merchant 1", address: "5th Avenue");
 
 PaymentRequestEnvelope payment_request() {
   final helper = RsaKeyHelper();
-  final privKey = helper.parsePrivateKeyFromPemFile("certs/test.key");
+  final privKey = helper.parsePrivateKeyFromPemFile(PRIVATE_KEY);
 
   final message = PaymentRequestMessage(
       merchant: MERCHANT,
@@ -111,7 +112,11 @@ void main() {
     expect(pr.merchant.name, equals('Merchant 1'));
     expect(pr.destinations[0].amount, equals(Decimal.fromInt(5)));
     expect(pr.destinations[0].destination_address, equals('btc_daddress'));
-  });
+    final helper = RsaKeyHelper();
+
+    expect(envelope.verify(helper.parsePublicKeyFromCertificateFile(CERTIFICATE)), true);
+});
+
 
   test("Send Payment", () async {
     final client = mock_it();

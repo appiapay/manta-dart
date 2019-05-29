@@ -179,6 +179,10 @@ class RsaKeyHelper {
     return rsaPublicKey;
   }
 
+  RSAPublicKey parsePublicKeyFromCertificateFile(String crtFile) {
+    final cert = File(crtFile);
+    return parsePublicKeyFromCertificate(cert.readAsStringSync());
+  }
 
   parsePublicKeyFromPem(pemString) {
     List<int> publicKeyDER = decodePEM(pemString);

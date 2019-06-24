@@ -21,7 +21,7 @@ const RECONNECT_INTERVAL = 3;
 
 class MantaStore {
   String session_id;
-  MqttClient client;
+  mqtt.MqttClient client;
   final String application_id;
   final String application_token;
   Stream<AckMessage> acks_stream;
@@ -31,9 +31,9 @@ class MantaStore {
       {@required this.application_id,
       @required this.application_token,
       String host = "localhost",
-      MqttClient mqtt_client = null}) {
+      mqtt.MqttClient mqtt_client = null}) {
     client = (mqtt_client == null)
-        ? MqttClient(host, generate_session_id())
+        ? mqtt.MqttClient(host, generate_session_id())
         : mqtt_client;
     //client.logging(true);
     client.keepAlivePeriod = 20;
@@ -53,19 +53,19 @@ class MantaStore {
   }
 
   Future<bool> waitForConnection() async {
-    if (client.connectionState == ConnectionState.connected) {
+    if (client.connectionStatus.state == mqtt.MqttConnectionState.connected) {
       return true;
     }
-    if (client.connectionState == ConnectionState.connecting) {
-      while (client.connectionState != ConnectionState.connected) {
+    if (client.connectionStatus.state == mqtt.MqttConnectionState.connecting) {
+      while (client.connectionStatus.state != mqtt.MqttConnectionState.connected) {
         await Future.delayed(Duration(milliseconds: 100));
       }
     }
   }
 
   void connect() async {
-    if (client.connectionState == ConnectionState.connected) return;
-    if (client.connectionState == ConnectionState.connecting) {
+    if (client.connectionStatus.state == mqtt.MqttConnectionState.connected) return;
+    if (client.connectionStatus.state == mqtt.MqttConnectionState.connecting) {
       await waitForConnection();
       return;
     }
@@ -80,13 +80,13 @@ class MantaStore {
 
     // Connect acks_stream
 
-    acks_stream = client.updates.where((List<MqttReceivedMessage> c) {
+    acks_stream = client.updates.where((List<mqtt.MqttReceivedMessage> c) {
       final tokens = c[0].topic.split('/');
       return tokens[0] == 'acks';
-    }).map((List<MqttReceivedMessage> c) {
-      final MqttPublishMessage recMess = c[0].payload as MqttPublishMessage;
+    }).map((List<mqtt.MqttReceivedMessage> c) {
+      final mqtt.MqttPublishMessage recMess = c[0].payload as mqtt.MqttPublishMessage;
       final json_data =
-          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+          mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
       return AckMessage.fromJson(json.decode(json_data));
     });
 
@@ -109,13 +109,13 @@ class MantaStore {
         fiat_currency: fiat,
         crypto_currency: crypto);
 
-    client.subscribe("acks/$session_id", MqttQos.atLeastOnce);
+    client.subscribe("acks/$session_id", mqtt.MqttQos.atLeastOnce);
 
-    final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
+    final mqtt.MqttClientPayloadBuilder builder = new mqtt.MqttClientPayloadBuilder();
     builder.addString(json.encode(request));
 
     client.publishMessage("merchant_order_request/$application_id",
-        MqttQos.atLeastOnce, builder.payload);
+        mqtt.MqttQos.atLeastOnce, builder.payload);
 
     logger.info("Publishing merchant_order_request for session $session_id");
 
@@ -131,11 +131,11 @@ class MantaStore {
   merchant_order_cancel() {
     logger.info("Publishing merchant_order_cancel for session $session_id");
 
-    final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
+    final mqtt.MqttClientPayloadBuilder builder = new mqtt.MqttClientPayloadBuilder();
     builder.addString('');
 
     client.publishMessage(
-        "merchant_order_cancel/$session_id", MqttQos.atLeastOnce, builder.payload);
+        "merchant_order_cancel/$session_id", mqtt.MqttQos.atLeastOnce, builder.payload);
   }
 }
 

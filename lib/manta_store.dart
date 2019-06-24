@@ -1,10 +1,3 @@
-/*
- * Package : mqtt_client
- * Author : S. Hamblett <steve.hamblett@linux.com>
- * Date   : 31/05/2017
- * Copyright :  S.Hamblett
- */
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:async/async.dart';

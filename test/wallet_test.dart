@@ -19,7 +19,7 @@ class MockClient extends Mock implements MqttClient {}
 MockClient mock_it() {
   final client = MockClient();
 
-  final mqtt_stream_controller = StreamController<List<MqttReceivedMessage>>();
+  final mqtt_stream_controller = StreamController<List<MqttReceivedMessage<MqttMessage>>>();
 
   final publish_message = MqttPublishMessage();
   final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();

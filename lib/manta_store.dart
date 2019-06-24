@@ -147,12 +147,4 @@ void main() async {
 
   final store = MantaStore(application_id: 'test', host: 'localhost');
   await store.connect();
-
-//  await store.merchant_order_request(amount: Decimal.parse("0.1"),
-//    fiat: 'EUR');
-
-  print("gatto");
-//  while (true) {
-//    await MqttUtilities.asyncSleep(1);
-//  }
 }

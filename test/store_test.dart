@@ -1,10 +1,12 @@
-import "package:test/test.dart";
-import "package:manta_dart/manta_store.dart";
-import 'package:mockito/mockito.dart';
-import 'package:mqtt_client/mqtt_client.dart';
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:decimal/decimal.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import "package:test/test.dart";
+
+import "package:manta_dart/manta_store.dart";
 import 'package:manta_dart/messages.dart';
 
 class MockClient extends Mock implements MqttClient {}
@@ -34,6 +36,11 @@ MockClient mock_it() {
     return null;
   });
 
+  when(client.connectionStatus).thenAnswer((_) {
+      var res = MqttClientConnectionStatus();
+      res.state = MqttConnectionState.connected;
+      return res;
+  });
   return client;
 }
 
@@ -65,6 +72,5 @@ void main() {
 
     expect(ack.status, equals('new'));
     expect(ack.txid, equals('0'));
-
   });
 }

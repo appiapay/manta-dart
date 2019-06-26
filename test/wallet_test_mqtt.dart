@@ -53,17 +53,31 @@ void main() {
       expect(wallet.client.connectionStatus.state,
         mqtt.MqttConnectionState.connected);
   });
-  test("Get PaymentRequest", () async {
+  test("Get and verify PaymentRequest with local cert", () async {
       String res = await store.send("/merchant_order",
         {"amount": "10", "fiat": "EUR"});
       print("Res is '${res}'");
       var ack = AckMessage.fromJson(jsonDecode(res));
       wallet = MantaWallet(ack.url);
+      await wallet.connect();
+      expect(wallet.client.updates.isBroadcast, true);
       var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
       final helper = RsaKeyHelper();
       expect(envelope.verify(helper.parsePublicKeyFromCertificateFile(CERTIFICATE)), true);
       var pr = envelope.unpack();
       expect(pr.fiat_currency, "EUR");
   });
-
+  test("Get and verify PaymentRequest with PayProc's cert", () async {
+      String res = await store.send("/merchant_order",
+        {"amount": "10", "fiat": "EUR"});
+      print("Res is '${res}'");
+      var ack = AckMessage.fromJson(jsonDecode(res));
+      wallet = MantaWallet(ack.url);
+      var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
+      var cert = await wallet.getCertificate(); 
+      final helper = RsaKeyHelper();
+      expect(envelope.verify(cert), true);
+      var pr = envelope.unpack();
+      expect(pr.fiat_currency, "EUR");
+  });
 }

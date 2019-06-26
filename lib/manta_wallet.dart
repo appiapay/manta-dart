@@ -2,13 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:async/async.dart' show StreamQueue;
 import 'package:logging/logging.dart' show Logger;
 import 'package:meta/meta.dart' show required;
 import 'package:mqtt_client/mqtt_client.dart' as mqtt;
-import "package:pointycastle/export.dart" show RSAPublicKey;
+import 'package:pointycastle/export.dart' show RSAPublicKey;
 import 'package:uuid/uuid.dart' show Uuid;
 
-import "messages.dart";
+import 'messages.dart' show AckMessage, BaseMessage, PaymentMessage,
+       PaymentRequestEnvelope;
+import 'crypto.dart' show RsaKeyHelper;
 
 
 String generate_session_id() {
@@ -24,9 +27,13 @@ class MantaWallet {
   String session_id;
   String host;
   int port;
-
+  Map<String, String> topics;
   mqtt.MqttClient client;
-  String certificate;
+  Completer<RSAPublicKey> certificate;
+  StreamQueue<RSAPublicKey> certificates;
+  StreamQueue<AckMessage> acks;
+  StreamQueue<PaymentRequestEnvelope> requests;
+  bool _gettingCert = false;
 
   static Match parseUrl(String url) {
     RegExp exp = new RegExp(r"^manta://((?:\w|\.)+)(?::(\d+))?/(.+)$");
@@ -43,6 +50,13 @@ class MantaWallet {
     client.keepAlivePeriod = 20;
     client.onDisconnected = onDisconnected;
     client.onConnected = onConnected;
+    certificate = Completer();
+    topics = {
+      'acks': 'acks/$session_id',
+      'certificate': 'certificate',
+      'payments': 'payments/$session_id',
+      'requests': 'payment_requests/$session_id'
+    };
   }
 
   factory MantaWallet(String url, {mqtt.MqttClient mqtt_client = null}) {
@@ -58,21 +72,37 @@ class MantaWallet {
     return null;
   }
 
+  Stream<AckMessage> _ackStream(String topic) {
+    final msg_lists = mqtt.MqttClientTopicFilter(topic, client.updates);
+    return msg_lists.updates.map((msgs) {
+      final mqtt.MqttPublishMessage msg = msgs[0].payload as mqtt.MqttPublishMessage;
+      final String jsonData = mqtt.MqttPublishPayload.bytesToStringAsString(msg.payload.message);
+      return AckMessage.fromJson(json.decode(jsonData));
+    });
+  }
+
+  Stream<RSAPublicKey> _certStream(String topic) {
+    final msg_lists = mqtt.MqttClientTopicFilter(topic, client.updates);
+    final helper = RsaKeyHelper();
+    return msg_lists.updates.map((msgs) {
+      final mqtt.MqttPublishMessage msg = msgs[0].payload as mqtt.MqttPublishMessage;
+      final String certData = mqtt.MqttPublishPayload.bytesToStringAsString(msg.payload.message);
+      return helper.parsePublicKeyFromCertificate(certData);
+    });
+  }
+
+  Stream<PaymentRequestEnvelope> _requestStream(String topic) {
+    final msg_lists = mqtt.MqttClientTopicFilter(topic, client.updates);
+    return msg_lists.updates.map((msgs) {
+      final mqtt.MqttPublishMessage msg = msgs[0].payload as mqtt.MqttPublishMessage;
+      final String jsonData = mqtt.MqttPublishPayload.bytesToStringAsString(msg.payload.message);
+      return PaymentRequestEnvelope.fromJson(json.decode(jsonData));
+    });
+  }
+
   Future<AckMessage> getAck({Duration timeout = Duration(seconds: 5)}) async {
-    final msgs = await client.updates
-        .where((List<mqtt.MqttReceivedMessage<mqtt.MqttMessage>> msgs) {
-          final tokens = msgs[0].topic.split('/');
-          return tokens[0] == "acks";
-        })
-        .timeout(timeout)
-        .first;
-
-    final mqtt.MqttPublishMessage recMess = msgs[0].payload as mqtt.MqttPublishMessage;
-    final json_data =
-        mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-
-    return AckMessage.fromJson(json.decode(json_data));
-
+    final msg = await acks.next.timeout(timeout);
+    return msg;
   }
 
   void connect() async {
@@ -99,7 +129,14 @@ class MantaWallet {
 
   void onConnected() {
     logger.info('Connected');
-    client.subscribe('certificate', mqtt.MqttQos.atLeastOnce);
+    client.subscribe(topics['certificate'], mqtt.MqttQos.atLeastOnce);
+    client.subscribe(topics['requests'], mqtt.MqttQos.atLeastOnce);
+    client.subscribe(topics['acks'], mqtt.MqttQos.atLeastOnce);
+
+    certificates = StreamQueue(_certStream(topics['certificate']));
+    requests = StreamQueue(_requestStream(topics['requests']));
+    acks = StreamQueue(_ackStream(topics['acks']));
+    getCertificate();
   }
 
   void onDisconnected() {
@@ -118,38 +155,35 @@ class MantaWallet {
     }
   }
 
-  Future<RSAPublicKey> getCertificate() async {
+  Future<RSAPublicKey> getCertificate({Duration timeout = Duration(seconds: 5)}) async {
     await connect();
+    if (!certificate.isCompleted && !_gettingCert) {
+      _gettingCert = true;
+      try {
+        final msg = await certificates.next
+          .timeout(timeout);
+        certificate.complete(msg);
+      } catch (e) {
+        certificate.completeError(e);
+      }
+    }
+    return await certificate.future;
   }
 
   Future<PaymentRequestEnvelope> getPaymentRequest(
-      {String cryptoCurrency = "all"}) async {
+      {String cryptoCurrency = "all", Duration timeout = Duration(seconds: 5)}) async {
     await connect();
 
     final mqtt.MqttClientPayloadBuilder builder = new mqtt.MqttClientPayloadBuilder();
     builder.addString("");
 
-    client.subscribe("payment_requests/$session_id", mqtt.MqttQos.atLeastOnce);
     client.publishMessage("payment_requests/$session_id/$cryptoCurrency",
         mqtt.MqttQos.atLeastOnce, builder.payload);
 
     logger.info("Published payment_requests/$session_id");
 
-    final msgs = await client.updates
-        .where((List<mqtt.MqttReceivedMessage<mqtt.MqttMessage>> msgs) {
-          final tokens = msgs[0].topic.split('/');
-          return tokens[0] == "payment_requests";
-        })
-        .timeout(Duration(seconds: 2))
-        .first;
-
-    final mqtt.MqttPublishMessage recMess = msgs[0].payload as mqtt.MqttPublishMessage;
-    final json_data =
-        mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-
-    final envelope = PaymentRequestEnvelope.fromJson(json.decode(json_data));
-
-    return envelope;
+    final msg = await requests.next.timeout(timeout);
+    return msg;
   }
 
   void sendPayment({@required String transactionHash,
@@ -157,13 +191,11 @@ class MantaWallet {
     await connect();
     final message = PaymentMessage(
         transaction_hash: transactionHash, crypto_currency: cryptoCurrency);
-
     final mqtt.MqttClientPayloadBuilder builder = new mqtt.MqttClientPayloadBuilder();
     builder.addString(jsonEncode(message));
 
-    client.subscribe("acks/$session_id", mqtt.MqttQos.atLeastOnce);
     client.publishMessage(
-        "payments/$session_id", mqtt.MqttQos.atLeastOnce, builder.payload);
+        topics['payments'], mqtt.MqttQos.atLeastOnce, builder.payload);
 
   }
 }

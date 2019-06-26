@@ -80,17 +80,15 @@ class MantaStore {
 
     // Connect acks_stream
 
-    acks_stream = client.updates.where((List<mqtt.MqttReceivedMessage> c) {
+    acks_stream = client.updates.where((c) {
       final tokens = c[0].topic.split('/');
       return tokens[0] == 'acks';
     }).map((List<mqtt.MqttReceivedMessage> c) {
       final mqtt.MqttPublishMessage recMess = c[0].payload as mqtt.MqttPublishMessage;
       final json_data =
           mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-      return AckMessage.fromJson(json.decode(json_data));
+        return AckMessage.fromJson(json.decode(json_data));
     });
-
-    acks_stream.forEach(print);
 
     acks = StreamQueue<AckMessage>(acks_stream);
   }

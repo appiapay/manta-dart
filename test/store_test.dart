@@ -13,34 +13,29 @@ class MockClient extends Mock implements MqttClient {}
 
 MockClient mock_it() {
   final client = MockClient();
-
-  final mqtt_stream_controller = StreamController<List<MqttReceivedMessage>>();
+  final mqtt_stream_controller = StreamController<List<MqttReceivedMessage<MqttMessage>>>();
+  final status = MqttClientConnectionStatus();
+  status.state = MqttConnectionState.disconnected;
 
   final ack = AckMessage(status:'new', url:"manta://something", txid:"0");
-
   final publish_message  = MqttPublishMessage();
-
   final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
   builder.addString(json.encode(ack));
-
   publish_message.publishData(builder.payload);
 
   final message = MqttReceivedMessage("acks/123", publish_message);
-
-  // when(client.updates).thenAnswer((_) => Stream.fromIterable([[message]]).asBroadcastStream());
-
   when(client.updates).thenAnswer((_) => mqtt_stream_controller.stream.asBroadcastStream());
-
   when(client.publishMessage("merchant_order_request/application1", any, any)).thenAnswer( (_) {
     mqtt_stream_controller.add([message]);
     return null;
   });
-
-  when(client.connectionStatus).thenAnswer((_) {
-      var res = MqttClientConnectionStatus();
-      res.state = MqttConnectionState.connected;
-      return res;
-  });
+  when(client.connectionStatus).thenReturn(status);
+  when(client.connect())
+    .thenAnswer((_) {
+        status.state = MqttConnectionState.connected;
+        client.onConnected();
+        return Future.value(null);
+    });
   return client;
 }
 

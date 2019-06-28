@@ -21,6 +21,7 @@ String generate_session_id() {
 final Logger logger = new Logger('MantaWallet');
 
 const RECONNECT_INTERVAL = 3;
+const MQTT_DEFAULT_PORT = 1883;
 
 
 class MantaWallet {
@@ -34,6 +35,7 @@ class MantaWallet {
   StreamQueue<AckMessage> acks;
   StreamQueue<PaymentRequestEnvelope> requests;
   bool _gettingCert = false;
+  bool autoReconnect = false;
 
   static Match parseUrl(String url) {
     RegExp exp = new RegExp(r"^manta://((?:\w|\.)+)(?::(\d+))?/(.+)$");
@@ -116,7 +118,7 @@ class MantaWallet {
       await client.connect();
     } catch (e) {
       logger.warning("Client exception - $e");
-      await reconnect();
+      if (autoReconnect) await reconnect();
     }
   }
 
@@ -141,7 +143,7 @@ class MantaWallet {
 
   void onDisconnected() {
     logger.info("Client disconnection");
-    reconnect();
+    if (autoReconnect) reconnect();
   }
 
   void waitForConnection() async {

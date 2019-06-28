@@ -35,6 +35,7 @@ class MantaWallet {
   StreamQueue<AckMessage> acks;
   StreamQueue<PaymentRequestEnvelope> requests;
   bool _gettingCert = false;
+  bool useWebSocket = false;
   bool autoReconnect = false;
 
   static Match parseUrl(String url) {
@@ -44,10 +45,11 @@ class MantaWallet {
   }
 
   MantaWallet._internal({this.session_id, this.host = "localhost",
-      this.port = 1883, mqtt.MqttClient mqtt_client = null}) {
+      this.port = MQTT_DEFAULT_PORT, mqtt.MqttClient mqtt_client = null,
+      this.useWebSocket = false, this.autoReconnect = false}) {
     client = (mqtt_client == null)
-        ? mqtt.MqttClient.withPort(host, generate_session_id(), port)
-        : mqtt_client;
+      ? mqtt.MqttClient.withPort(host, generate_session_id(), port)
+      : mqtt_client;
     //client.logging(true);
     client.keepAlivePeriod = 20;
     client.onDisconnected = onDisconnected;
@@ -61,15 +63,26 @@ class MantaWallet {
     };
   }
 
-  factory MantaWallet(String url, {mqtt.MqttClient mqtt_client = null}) {
+  factory MantaWallet(String url, {mqtt.MqttClient mqtt_client = null,
+      useWebSocket = false, autoReconnect = false}) {
     final match = MantaWallet.parseUrl(url);
     if (match != null) {
-      final port = match.group(2) ?? 1883;
-      return MantaWallet._internal(
-          session_id: match.group(3),
-          host: match.group(1),
-          port: port,
-          mqtt_client: mqtt_client);
+      int port;
+      String host = match.group(1);
+      if (useWebSocket) {
+        port = match.group(2) ?? 443;
+        host = "wss://$host/mqtt";
+      } else {
+        port = match.group(2) ?? MQTT_DEFAULT_PORT;
+      }
+      MantaWallet inst = MantaWallet._internal(
+        session_id: match.group(3),
+        host: host,
+        port: port,
+        mqtt_client: mqtt_client,
+        useWebSocket: useWebSocket,
+        autoReconnect: autoReconnect);
+      inst.client.useAlternateWebSocketImplementation = false;
     }
     return null;
   }
@@ -115,6 +128,7 @@ class MantaWallet {
     }
 
     try {
+      client.useWebSocket = useWebSocket;
       await client.connect();
     } catch (e) {
       logger.warning("Client exception - $e");

@@ -135,7 +135,7 @@ void main() {
 
     expect(pr.merchant.name, equals('Merchant 1'));
     expect(pr.destinations[0].amount, equals(Decimal.fromInt(5)));
-    expect(pr.destinations[0].destination_address, equals('btc_daddress'))
+    expect(pr.destinations[0].destination_address, equals('btc_daddress'));
     expect(envelope.verify(helper.parsePublicKeyFromCertificateFile(CERTIFICATE)), true);
 });
 

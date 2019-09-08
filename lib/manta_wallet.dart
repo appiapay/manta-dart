@@ -115,7 +115,7 @@ class MantaWallet {
     });
   }
 
-  Future<AckMessage> getAck({Duration timeout = Duration(seconds: 5)}) async {
+  Future<AckMessage> getAck({Duration timeout = const Duration(seconds: 5)}) async {
     final msg = await acks.next.timeout(timeout);
     return msg;
   }
@@ -171,7 +171,7 @@ class MantaWallet {
     }
   }
 
-  Future<RSAPublicKey> getCertificate({Duration timeout = Duration(seconds: 5)}) async {
+  Future<RSAPublicKey> getCertificate({Duration timeout = const Duration(seconds: 5)}) async {
     await connect();
     if (!certificate.isCompleted && !_gettingCert) {
       _gettingCert = true;
@@ -187,7 +187,7 @@ class MantaWallet {
   }
 
   Future<PaymentRequestEnvelope> getPaymentRequest(
-      {String cryptoCurrency = "all", Duration timeout = Duration(seconds: 5)}) async {
+      {String cryptoCurrency = "all", Duration timeout = const Duration(seconds: 5)}) async {
     await connect();
 
     final mqtt.MqttClientPayloadBuilder builder = new mqtt.MqttClientPayloadBuilder();

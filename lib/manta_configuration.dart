@@ -58,14 +58,16 @@ class MantaConfiguration {
   }
 
   Future<bool> waitForConnection() async {
-    if (client.connectionState == ConnectionState.connected) {
+    if (client.connectionStatus.state == MqttConnectionState.connected) {
       return true;
     }
-    if (client.connectionState == ConnectionState.connecting) {
-      while (client.connectionState != ConnectionState.connected) {
+    if (client.connectionStatus.state == MqttConnectionState.connecting) {
+      while (client.connectionStatus.state != MqttConnectionState.connected) {
         await Future.delayed(Duration(milliseconds: 100));
       }
+      return true;
     }
+    return false;
   }
 
   void connect() async {

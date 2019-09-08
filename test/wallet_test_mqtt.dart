@@ -24,7 +24,8 @@ class RemoteController {
     this.host = host ?? 'localhost';
     client = HttpClient();
   }
-  Future<String> send(String path, [Map data = Map()]) async {
+  Future<String> send(String path, [Map data = null]) async {
+    data ??=  Map();
     HttpClientRequest req = await client.post(host, port, path);
     req.write(jsonEncode(data));
     HttpClientResponse res = await req.close();

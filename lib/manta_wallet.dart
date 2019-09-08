@@ -83,6 +83,7 @@ class MantaWallet {
         useWebSocket: useWebSocket,
         autoReconnect: autoReconnect);
       inst.client.useAlternateWebSocketImplementation = false;
+      return inst;
     }
     return null;
   }

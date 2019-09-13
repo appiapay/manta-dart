@@ -5,7 +5,7 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
-  mqtt_client: ^5.5.3
+  mqtt_client: ^5.5.4
   decimal: ^0.3.2
   uuid: ^1.0.0
   json_annotation: ^2.0.0

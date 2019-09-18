@@ -29,7 +29,7 @@ class MantaStore {
 
   MantaStore(
       {@required this.application_id,
-      @required this.application_token,
+      this.application_token,
       String host = "localhost",
       mqtt.MqttClient mqtt_client = null}) {
     client = (mqtt_client == null)
@@ -52,11 +52,10 @@ class MantaStore {
     reconnect();
   }
 
-  Future<bool> waitForConnection() async {
+  Future<void> waitForConnection() async {
     if (client.connectionStatus.state == mqtt.MqttConnectionState.connected) {
-      return true;
-    }
-    if (client.connectionStatus.state == mqtt.MqttConnectionState.connecting) {
+      return;
+    } else if (client.connectionStatus.state == mqtt.MqttConnectionState.connecting) {
       while (client.connectionStatus.state != mqtt.MqttConnectionState.connected) {
         await Future.delayed(Duration(milliseconds: 100));
       }

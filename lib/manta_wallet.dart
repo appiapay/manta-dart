@@ -9,7 +9,7 @@ import 'package:mqtt_client/mqtt_client.dart' as mqtt;
 import 'package:pointycastle/export.dart' show RSAPublicKey;
 import 'package:uuid/uuid.dart' show Uuid;
 
-import 'messages.dart' show AckMessage, BaseMessage, PaymentMessage,
+import 'messages.dart' show AckMessage, PaymentMessage,
        PaymentRequestEnvelope;
 import 'crypto.dart' show RsaKeyHelper;
 

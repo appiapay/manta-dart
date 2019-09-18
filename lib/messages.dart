@@ -46,7 +46,7 @@ class MerchantOrderRequestMessage extends BaseMessage {
     _$MerchantOrderRequestMessageFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! MerchantOrderRequestMessage) {
       return false;
@@ -83,7 +83,7 @@ class AckMessage extends BaseMessage {
     _$AckMessageFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! AckMessage) {
       return false;
@@ -112,7 +112,7 @@ class Destination extends BaseMessage {
     _$DestinationFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! Destination) {
       return false;
@@ -134,7 +134,7 @@ class Merchant extends BaseMessage {
     _$MerchantFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! Merchant) {
       return false;
@@ -168,7 +168,7 @@ class PaymentRequestMessage extends BaseMessage {
   });
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! PaymentRequestMessage) {
       return false;
@@ -200,7 +200,7 @@ class PaymentRequestEnvelope extends BaseMessage {
     _$PaymentRequestEnvelopeFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! PaymentRequestEnvelope) {
       return false;
@@ -236,7 +236,7 @@ class PaymentMessage extends BaseMessage {
     _$PaymentMessageFromJson(json);
 
   @override
-  bool operator ==(BaseMessage other) {
+  bool operator ==(dynamic other) {
     // cannot use reflection, gets in the way of flutter's tree shaking
     if (other is! PaymentMessage) {
       return false;

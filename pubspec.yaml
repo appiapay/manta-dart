@@ -1,6 +1,9 @@
 name: manta_dart
 version: 0.0.3
-
+description: Manta Protocol implementation for Dart
+author: Appia Systems Limited
+homepage: http://appia.co
+documentation: https://appiapay.github.io/manta-python
 environment:
   sdk: ">=2.1.0 <3.0.0"
 

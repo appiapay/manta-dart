@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:pointycastle/pointycastle.dart';
 import 'crypto.dart';
 
-final Logger logger = new Logger('MantaConfiguration');
+final Logger logger = Logger('MantaConfiguration');
 
 const RECONNECT_INTERVAL = 3;
 
@@ -16,6 +16,7 @@ class MantaConfiguration {
   final PublicKey rsaPublic;
   final RsaKeyHelper helper;
 
+  bool reconnection = true;
   MqttClient client;
   Map<String, dynamic> configuration;
 
@@ -26,8 +27,8 @@ class MantaConfiguration {
       @required this.rsaPrivate,
       @required this.rsaPublic,
       String host = "localhost",
-      MqttClient mqtt_client = null,
-      this.configuration_callback}) : helper = RsaKeyHelper()
+      MqttClient mqtt_client,
+      this.configuration_callback}) : helper = RsaKeyHelper(), assert (host?.isNotEmpty)
   {
     client = (mqtt_client == null) ? MqttClient(host, device_id) : mqtt_client;
     client.keepAlivePeriod = 20;
@@ -36,14 +37,14 @@ class MantaConfiguration {
 
   void reconnect() async {
     logger.info('Waiting $RECONNECT_INTERVAL seconds');
-    sleep(Duration(seconds: RECONNECT_INTERVAL));
+    await Future.delayed(const Duration(seconds: RECONNECT_INTERVAL));
     logger.info('Reconnecting');
     await connect();
   }
 
   void onDisconnected() {
     logger.info("Client disconnection");
-    reconnect();
+    if(reconnection) {reconnect();};
   }
 
   Map<String, dynamic> decode_configuration(String message) {
@@ -98,10 +99,20 @@ class MantaConfiguration {
     });
   }
 
+  void disconnect() {
+    reconnection = false;
+    client.disconnect();
+  }
+
+  void dispose() {
+    disconnect();
+    client = null;
+  }
+
   void link(String link_code) async {
     await waitForConnection();
 
-    final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
+    final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(helper.encodePublicKeyToPem(rsaPublic));
 
     client.publishMessage("configure/$device_id/link/$link_code",
@@ -113,7 +124,7 @@ class MantaConfiguration {
   void test_crypto() async {
     await connect();
     final helper = RsaKeyHelper();
-    final MqttClientPayloadBuilder builder = new MqttClientPayloadBuilder();
+    final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(helper.encodePublicKeyToPem(rsaPublic));
     client.publishMessage("test/",
         MqttQos.atLeastOnce, builder.payload);

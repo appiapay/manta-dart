@@ -6,7 +6,8 @@ import "package:pointycastle/export.dart" show RSAPublicKey;
 import 'package:test/test.dart' show expect, equals, isNot, test;
 
 import 'package:manta_dart/crypto.dart' show RsaKeyHelper;
-import 'package:manta_dart/messages.dart' show AckMessage, PaymentRequestEnvelope;
+import 'package:manta_dart/messages.dart'
+    show AckMessage, PaymentRequestEnvelope;
 
 void main() {
   test('AckMessage encode', () {
@@ -53,14 +54,15 @@ void main() {
     expect(b, isNot(equals(a)));
   });
   test('Verify PaymentRequestEnvelope signature', () {
-      var msg_file = File('test/payment_request_envelope.json');
-      var envelope = PaymentRequestEnvelope.fromJson(
+    var msg_file = File('test/payment_request_envelope.json');
+    var envelope = PaymentRequestEnvelope.fromJson(
         jsonDecode(msg_file.readAsStringSync()));
-      var cert = File('test/certificates/root/certs/test.crt');
-      var helper = RsaKeyHelper();
-      RSAPublicKey key = helper.parsePublicKeyFromCertificate(cert.readAsStringSync());
-      expect(envelope.verify(key), true);
-      envelope.message += 'foo';
-      expect(envelope.verify(key), false);
+    var cert = File('test/certificates/root/certs/test.crt');
+    var helper = RsaKeyHelper();
+    RSAPublicKey key =
+        helper.parsePublicKeyFromCertificate(cert.readAsStringSync());
+    expect(envelope.verify(key), true);
+    envelope.message += 'foo';
+    expect(envelope.verify(key), false);
   });
 }

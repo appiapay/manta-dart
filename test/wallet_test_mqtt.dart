@@ -25,60 +25,61 @@ class RemoteController {
     client = HttpClient();
   }
   Future<String> send(String path, [Map data = null]) async {
-    data ??=  Map();
+    data ??= Map();
     HttpClientRequest req = await client.post(host, port, path);
     req.write(jsonEncode(data));
     HttpClientResponse res = await req.close();
     String result = '';
     await res.transform(utf8.decoder).listen((contents) {
-        result += contents;
+      result += contents;
     });
     return result;
   }
 }
-
 
 void main() {
   MantaWallet wallet;
   RemoteController store;
   RemoteController payproc;
   setUp(() {
-      wallet = MantaWallet('manta://localhost/123');
-      store = RemoteController(8090);
-      payproc = RemoteController(8092);
+    wallet = MantaWallet('manta://localhost/123');
+    store = RemoteController(8090);
+    payproc = RemoteController(8092);
   });
   test("Connection", () async {
-      expect(wallet.client.connectionStatus.state,
+    expect(wallet.client.connectionStatus.state,
         mqtt.MqttConnectionState.disconnected);
-      await wallet.connect();
-      expect(wallet.client.connectionStatus.state,
+    await wallet.connect();
+    expect(wallet.client.connectionStatus.state,
         mqtt.MqttConnectionState.connected);
   });
   test("Get and verify PaymentRequest with local cert", () async {
-      String res = await store.send("/merchant_order",
-        {"amount": "10", "fiat": "EUR"});
-      print("Res is '${res}'");
-      var ack = AckMessage.fromJson(jsonDecode(res));
-      wallet = MantaWallet(ack.url);
-      await wallet.connect();
-      expect(wallet.client.updates.isBroadcast, true);
-      var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
-      final helper = RsaKeyHelper();
-      expect(envelope.verify(helper.parsePublicKeyFromCertificateFile(CERTIFICATE)), true);
-      var pr = envelope.unpack();
-      expect(pr.fiat_currency, "EUR");
+    String res =
+        await store.send("/merchant_order", {"amount": "10", "fiat": "EUR"});
+    print("Res is '${res}'");
+    var ack = AckMessage.fromJson(jsonDecode(res));
+    wallet = MantaWallet(ack.url);
+    await wallet.connect();
+    expect(wallet.client.updates.isBroadcast, true);
+    var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
+    final helper = RsaKeyHelper();
+    expect(
+        envelope.verify(helper.parsePublicKeyFromCertificateFile(CERTIFICATE)),
+        true);
+    var pr = envelope.unpack();
+    expect(pr.fiat_currency, "EUR");
   });
   test("Get and verify PaymentRequest with PayProc's cert", () async {
-      String res = await store.send("/merchant_order",
-        {"amount": "10", "fiat": "EUR"});
-      print("Res is '${res}'");
-      var ack = AckMessage.fromJson(jsonDecode(res));
-      wallet = MantaWallet(ack.url);
-      var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
-      var cert = await wallet.getCertificate(); 
-      final helper = RsaKeyHelper();
-      expect(envelope.verify(cert), true);
-      var pr = envelope.unpack();
-      expect(pr.fiat_currency, "EUR");
+    String res =
+        await store.send("/merchant_order", {"amount": "10", "fiat": "EUR"});
+    print("Res is '${res}'");
+    var ack = AckMessage.fromJson(jsonDecode(res));
+    wallet = MantaWallet(ack.url);
+    var envelope = await wallet.getPaymentRequest(cryptoCurrency: 'NANO');
+    var cert = await wallet.getCertificate();
+    final helper = RsaKeyHelper();
+    expect(envelope.verify(cert), true);
+    var pr = envelope.unpack();
+    expect(pr.fiat_currency, "EUR");
   });
 }

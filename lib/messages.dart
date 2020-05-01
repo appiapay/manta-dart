@@ -1,7 +1,8 @@
 import 'dart:convert' show jsonDecode, jsonEncode;
 
 import 'package:decimal/decimal.dart' show Decimal;
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable, JsonKey;
+import 'package:json_annotation/json_annotation.dart'
+    show JsonSerializable, JsonKey;
 import "package:pointycastle/export.dart" show RSAPrivateKey, RSAPublicKey;
 
 import "crypto.dart" show RsaKeyHelper;
@@ -11,7 +12,8 @@ part 'messages.g.dart';
 const MANTA_VERSION = '1.6';
 const HASHCODE_K = 37 * 17;
 
-Decimal str_to_decimal(String value) => value == null ? null : Decimal.parse(value);
+Decimal str_to_decimal(String value) =>
+    value == null ? null : Decimal.parse(value);
 
 String decimal_to_str(Decimal value) => value.toString();
 
@@ -36,16 +38,15 @@ class MerchantOrderRequestMessage extends BaseMessage {
   String crypto_currency;
   String version = MANTA_VERSION;
 
-  MerchantOrderRequestMessage({
-      this.amount,
+  MerchantOrderRequestMessage(
+      {this.amount,
       this.session_id,
       this.fiat_currency,
       this.crypto_currency,
-      this.version = MANTA_VERSION
-  });
+      this.version = MANTA_VERSION});
 
   factory MerchantOrderRequestMessage.fromJson(Map<String, dynamic> json) =>
-    _$MerchantOrderRequestMessageFromJson(json);
+      _$MerchantOrderRequestMessageFromJson(json);
 
   @override
   bool operator ==(dynamic other) {
@@ -71,18 +72,17 @@ class AckMessage extends BaseMessage {
   String transaction_currency;
   String memo;
 
-  AckMessage({
-      this.txid,
+  AckMessage(
+      {this.txid,
       this.status,
       this.url,
       this.amount,
       this.transaction_hash,
       this.transaction_currency,
-      this.memo
-  });
+      this.memo});
 
   factory AckMessage.fromJson(Map<String, dynamic> json) =>
-    _$AckMessageFromJson(json);
+      _$AckMessageFromJson(json);
 
   @override
   bool operator ==(dynamic other) {
@@ -111,7 +111,7 @@ class Destination extends BaseMessage {
   });
 
   factory Destination.fromJson(Map<String, dynamic> json) =>
-    _$DestinationFromJson(json);
+      _$DestinationFromJson(json);
 
   @override
   bool operator ==(dynamic other) {
@@ -133,7 +133,7 @@ class Merchant extends BaseMessage {
   Merchant({this.name, this.address});
 
   factory Merchant.fromJson(Map<String, dynamic> json) =>
-    _$MerchantFromJson(json);
+      _$MerchantFromJson(json);
 
   @override
   bool operator ==(dynamic other) {
@@ -159,15 +159,14 @@ class PaymentRequestMessage extends BaseMessage {
   Set<String> supported_cryptos;
 
   factory PaymentRequestMessage.fromJson(Map<String, dynamic> json) =>
-    _$PaymentRequestMessageFromJson(json);
+      _$PaymentRequestMessageFromJson(json);
 
-  PaymentRequestMessage({
-      this.merchant,
+  PaymentRequestMessage(
+      {this.merchant,
       this.amount,
       this.fiat_currency,
       this.destinations,
-      this.supported_cryptos
-  });
+      this.supported_cryptos});
 
   @override
   bool operator ==(dynamic other) {
@@ -185,7 +184,10 @@ class PaymentRequestMessage extends BaseMessage {
     final helper = RsaKeyHelper();
     final signature = helper.sign(jsonMessage, key);
 
-    return PaymentRequestEnvelope(message: jsonMessage, signature: signature,);
+    return PaymentRequestEnvelope(
+      message: jsonMessage,
+      signature: signature,
+    );
   }
 }
 
@@ -199,7 +201,7 @@ class PaymentRequestEnvelope extends BaseMessage {
       {this.message, this.signature, this.version = MANTA_VERSION});
 
   factory PaymentRequestEnvelope.fromJson(Map<String, dynamic> json) =>
-    _$PaymentRequestEnvelopeFromJson(json);
+      _$PaymentRequestEnvelopeFromJson(json);
 
   @override
   bool operator ==(dynamic other) {
@@ -228,14 +230,13 @@ class PaymentMessage extends BaseMessage {
   String transaction_hash;
   String version;
 
-  PaymentMessage({
-      this.crypto_currency,
+  PaymentMessage(
+      {this.crypto_currency,
       this.transaction_hash,
-      this.version = MANTA_VERSION
-  });
+      this.version = MANTA_VERSION});
 
   factory PaymentMessage.fromJson(Map<String, dynamic> json) =>
-    _$PaymentMessageFromJson(json);
+      _$PaymentMessageFromJson(json);
 
   @override
   bool operator ==(dynamic other) {

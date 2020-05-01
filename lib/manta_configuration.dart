@@ -28,8 +28,9 @@ class MantaConfiguration {
       @required this.rsaPublic,
       String host = "localhost",
       MqttClient mqtt_client,
-      this.configuration_callback}) : helper = RsaKeyHelper(), assert (host?.isNotEmpty)
-  {
+      this.configuration_callback})
+      : helper = RsaKeyHelper(),
+        assert(host?.isNotEmpty) {
     client = (mqtt_client == null) ? MqttClient(host, device_id) : mqtt_client;
     client.keepAlivePeriod = 20;
     client.onDisconnected = onDisconnected;
@@ -44,7 +45,10 @@ class MantaConfiguration {
 
   void onDisconnected() {
     logger.info("Client disconnection");
-    if(reconnection) {reconnect();};
+    if (reconnection) {
+      reconnect();
+    }
+    ;
   }
 
   Map<String, dynamic> decode_configuration(String message) {
@@ -52,7 +56,7 @@ class MantaConfiguration {
 
     if (configuration['application_token'] != "") {
       configuration['application_token'] = helper.decrypt_from_b64(
-        configuration['application_token'], rsaPrivate);
+          configuration['application_token'], rsaPrivate);
     }
 
     return configuration;
@@ -72,7 +76,6 @@ class MantaConfiguration {
   }
 
   void connect() async {
-
     try {
       await client.connect();
       logger.info('Connected');
@@ -126,8 +129,7 @@ class MantaConfiguration {
     final helper = RsaKeyHelper();
     final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(helper.encodePublicKeyToPem(rsaPublic));
-    client.publishMessage("test/",
-        MqttQos.atLeastOnce, builder.payload);
+    client.publishMessage("test/", MqttQos.atLeastOnce, builder.payload);
   }
 }
 

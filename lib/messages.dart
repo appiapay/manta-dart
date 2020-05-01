@@ -11,7 +11,7 @@ part 'messages.g.dart';
 const MANTA_VERSION = '1.6';
 const HASHCODE_K = 37 * 17;
 
-Decimal str_to_decimal(String value) => Decimal.parse(value);
+Decimal str_to_decimal(String value) => value == null ? null : Decimal.parse(value);
 
 String decimal_to_str(Decimal value) => value.toString();
 
@@ -34,12 +34,14 @@ class MerchantOrderRequestMessage extends BaseMessage {
   String session_id;
   String fiat_currency;
   String crypto_currency;
+  String version = MANTA_VERSION;
 
   MerchantOrderRequestMessage({
       this.amount,
       this.session_id,
       this.fiat_currency,
-      this.crypto_currency
+      this.crypto_currency,
+      this.version = MANTA_VERSION
   });
 
   factory MerchantOrderRequestMessage.fromJson(Map<String, dynamic> json) =>

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:decimal/decimal.dart';
@@ -21,7 +20,7 @@ const RECONNECT_INTERVAL = 3;
 
 class MantaStore {
   String session_id;
-  final subscriptions = List<String>();
+  final subscriptions = <String>[];
   mqtt.MqttClient client;
   final String application_id;
   final String application_token;
@@ -32,7 +31,7 @@ class MantaStore {
   MantaStore(
       {@required this.application_id,
       this.application_token,
-      String host = "localhost",
+      String host = 'localhost',
       mqtt.MqttClient mqtt_client})
       : assert(host?.isNotEmpty) {
     client = (mqtt_client == null)
@@ -54,7 +53,7 @@ class MantaStore {
   }
 
   void onDisconnected() {
-    logger.info("Client disconnection");
+    logger.info('Client disconnection');
     if (reconnection) {
       reconnect();
     }
@@ -62,7 +61,7 @@ class MantaStore {
   }
 
   void onUnsubscribed(String topic) {
-    logger.info("Unsubscribed from $topic");
+    logger.info('Unsubscribed from $topic');
   }
 
   Future<void> waitForConnection() async {
@@ -84,7 +83,7 @@ class MantaStore {
 
   void clean() async {
     for (var topic in subscriptions) {
-      logger.info("Unsubscribing $topic");
+      logger.info('Unsubscribing $topic');
       client.unsubscribe(topic);
     }
 
@@ -96,8 +95,9 @@ class MantaStore {
   }
 
   void connect() async {
-    if (client.connectionStatus.state == mqtt.MqttConnectionState.connected)
+    if (client.connectionStatus.state == mqtt.MqttConnectionState.connected) {
       return;
+    }
     if (client.connectionStatus.state == mqtt.MqttConnectionState.connecting) {
       await waitForConnection();
       return;
@@ -107,7 +107,7 @@ class MantaStore {
       await client.connect(application_id, application_token);
       logger.info('Connected');
     } catch (e) {
-      logger.warning("Client exception - $e");
+      logger.warning('Client exception - $e');
       await reconnect();
     }
 
@@ -117,11 +117,11 @@ class MantaStore {
       final tokens = c[0].topic.split('/');
       return tokens[0] == 'acks';
     }).map((List<mqtt.MqttReceivedMessage> c) {
-      final mqtt.MqttPublishMessage recMess =
-          c[0].payload as mqtt.MqttPublishMessage;
+      final recMess = c[0].payload as mqtt.MqttPublishMessage;
       final json_data = mqtt.MqttPublishPayload.bytesToStringAsString(
           recMess.payload.message);
-      return AckMessage.fromJson(json.decode(json_data));
+      final ackMessage = AckMessage.fromJson(json.decode(json_data));
+      return ackMessage;
     });
 
     acks = StreamQueue<AckMessage>(acks_stream.asBroadcastStream());
@@ -143,7 +143,7 @@ class MantaStore {
 
     await clean();
 
-    this.session_id = generate_session_id();
+    session_id = generate_session_id();
 
     final request = MerchantOrderRequestMessage(
         amount: amount,
@@ -151,36 +151,34 @@ class MantaStore {
         fiat_currency: fiat,
         crypto_currency: crypto);
 
-    subscribe("acks/$session_id");
+    subscribe('acks/$session_id');
 
-    final mqtt.MqttClientPayloadBuilder builder =
-        mqtt.MqttClientPayloadBuilder();
+    final builder = mqtt.MqttClientPayloadBuilder();
     builder.addString(json.encode(request));
 
-    client.publishMessage("merchant_order_request/$application_id",
+    client.publishMessage('merchant_order_request/$application_id',
         mqtt.MqttQos.atLeastOnce, builder.payload);
 
-    logger.info("Publishing merchant_order_request for session $session_id");
+    logger.info('Publishing merchant_order_request for session $session_id');
 
     final ack = await acks.next.timeout(Duration(seconds: 2));
 
     if (ack.status != 'new') {
-      throw Exception("Invalid ack message ${ack.toJson()}");
+      throw Exception('Invalid ack message ${ack.toJson()}');
     }
 
-    logger.info("Received ack: ${ack.toJson()}");
+    logger.info('Received ack: ${ack.toJson()}');
 
     return ack;
   }
 
   void merchant_order_cancel() {
-    logger.info("Publishing merchant_order_cancel for session $session_id");
+    logger.info('Publishing merchant_order_cancel for session $session_id');
 
-    final mqtt.MqttClientPayloadBuilder builder =
-        mqtt.MqttClientPayloadBuilder();
+    final builder = mqtt.MqttClientPayloadBuilder();
     builder.addString('');
 
-    client.publishMessage("merchant_order_cancel/$session_id",
+    client.publishMessage('merchant_order_cancel/$session_id',
         mqtt.MqttQos.atLeastOnce, builder.payload);
   }
 }
